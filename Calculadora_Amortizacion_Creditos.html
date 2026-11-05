@@ -1,0 +1,288 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Calculadora Financiera de Amortización – Análisis de Créditos</title>
+<style>
+:root{--navy:#142b45;--blue:#1e5a7a;--teal:#168477;--green:#16834a;--red:#b54747;--amber:#a86a12;--ink:#233447;--muted:#68798b;--line:#dce4eb;--bg:#f3f6f9;--white:#fff;--soft:#eaf1f6}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--ink);font:14px/1.5 "Segoe UI",Arial,sans-serif}
+header{background:linear-gradient(120deg,var(--navy),var(--blue));color:white;padding:27px max(22px,calc((100% - 1400px)/2))}
+header h1{margin:0;font-size:clamp(22px,3vw,31px);letter-spacing:.2px}
+header p{margin:7px 0 0;color:#d8e6ef;max-width:900px}
+main{max-width:1400px;margin:22px auto;padding:0 18px 40px}
+.card{background:var(--white);border:1px solid var(--line);border-radius:12px;padding:20px;margin-bottom:18px;box-shadow:0 3px 12px rgba(20,43,69,.045)}
+.card h2{font-size:18px;color:var(--navy);margin:0 0 15px}
+.section-sub{color:var(--muted);font-size:12px;margin:-9px 0 15px}
+.form-grid{display:grid;grid-template-columns:repeat(4,minmax(180px,1fr));gap:15px}
+.field label{display:block;font-weight:650;color:var(--navy);margin-bottom:5px}
+.field input,.field select{width:100%;padding:10px 11px;border:1px solid #c8d4df;border-radius:7px;background:#fff;color:var(--ink);font:inherit}
+.field input:focus,.field select:focus{outline:2px solid #a9cbdc;border-color:var(--blue)}
+.help{display:block;color:var(--muted);font-size:11px;line-height:1.35;margin-top:5px;min-height:30px}
+.actions{display:flex;flex-wrap:wrap;gap:9px;margin-top:18px}
+button{border:0;border-radius:7px;padding:10px 15px;font-weight:650;cursor:pointer;font:inherit}
+.primary{background:var(--blue);color:white}.secondary{background:#e8eef3;color:var(--navy)}.accent{background:var(--teal);color:white}.danger{background:#f8e9e9;color:#963d3d}
+button:hover{filter:brightness(.96)}
+.alert{display:none;border-radius:8px;padding:11px 13px;margin-top:13px;background:#fff2e2;color:#82500b;border:1px solid #f0d4a7}
+.kpis{display:grid;grid-template-columns:repeat(5,minmax(140px,1fr));gap:11px}
+.kpi{border:1px solid var(--line);border-radius:9px;padding:13px;background:#fbfcfd}
+.kpi .label{font-size:11px;color:var(--muted);text-transform:uppercase;letter-spacing:.45px}
+.kpi .value{font-size:20px;font-weight:750;color:var(--navy);margin-top:3px;overflow-wrap:anywhere}
+.kpi .hint{font-size:11px;color:var(--muted)}
+.table-wrap{overflow:auto;border:1px solid var(--line);border-radius:8px}
+table{border-collapse:collapse;width:100%;font-size:12px;white-space:nowrap}
+th{background:#edf2f6;color:var(--navy);font-weight:700;position:sticky;top:0;z-index:1}
+td,th{padding:9px 10px;border-bottom:1px solid #e5ebf0;text-align:right}
+td:first-child,th:first-child{text-align:center}
+td:nth-child(2),th:nth-child(2){text-align:center}
+tbody tr:hover{background:#f7fafc}
+tfoot td{font-weight:750;background:#f1f5f8}
+.note{font-size:12px;color:var(--muted);margin-top:10px}
+.two-col{display:grid;grid-template-columns:1fr 1fr;gap:18px}
+.chart-box{min-height:250px}
+canvas{width:100%;height:250px;display:block}
+.legend{display:flex;gap:15px;flex-wrap:wrap;font-size:11px;color:var(--muted)}
+.legend span:before{content:"";display:inline-block;width:9px;height:9px;border-radius:2px;background:var(--swatch);margin-right:5px}
+.badge{display:inline-block;padding:3px 8px;border-radius:20px;background:#e8f4ed;color:#17683d;font-size:11px;font-weight:700}
+.comparison{display:grid;grid-template-columns:repeat(3,1fr);gap:12px}
+.compare-card{border:1px solid var(--line);border-radius:10px;padding:14px}
+.compare-card h3{margin:0 0 10px;color:var(--navy);font-size:15px}
+.compare-card .big{font-size:21px;font-weight:750;color:var(--blue)}
+.compare-card p{margin:5px 0;font-size:12px;color:var(--muted)}
+.method-note{background:#f0f6f8;border-left:4px solid var(--teal);padding:12px 14px;border-radius:5px;font-size:12px}
+footer{text-align:center;color:var(--muted);font-size:11px;padding:10px}
+@media(max-width:950px){.form-grid{grid-template-columns:repeat(2,1fr)}.kpis{grid-template-columns:repeat(3,1fr)}}
+@media(max-width:620px){main{padding:0 10px 25px}.card{padding:15px}.form-grid,.two-col,.comparison{grid-template-columns:1fr}.kpis{grid-template-columns:repeat(2,1fr)}header{padding:22px 16px}.kpi .value{font-size:17px}}
+@media print{body{background:#fff;font-size:10px}header{padding:12px 18px}.card{box-shadow:none;break-inside:avoid;margin-bottom:10px;padding:12px}main{max-width:none;margin:0;padding:8px}.actions{display:none}.table-wrap{overflow:visible}table{font-size:9px}th{position:static}.chart-box{height:190px}canvas{height:190px}footer{display:none}}
+</style>
+</head>
+<body>
+<header>
+  <h1>Calculadora Financiera de Amortización</h1>
+  <p>Herramienta de apoyo para el análisis de créditos. Modela los sistemas francés, alemán y americano, incorpora el período de gracia y permite comparar el costo financiero bajo los mismos supuestos.</p>
+</header>
+<main>
+<section class="card">
+  <h2>1. Parámetros del crédito</h2>
+  <p class="section-sub">Complete los datos y seleccione el método que desea analizar. Los campos incluyen una guía para facilitar su uso por el oficial de crédito.</p>
+  <div class="form-grid">
+    <div class="field"><label for="principal">Monto del préstamo (B/.)</label><input id="principal" type="number" min="0.01" step="0.01" value="100000"><small class="help">Capital inicial desembolsado al cliente. Ingrese el monto aprobado o propuesto, sin incluir intereses futuros.</small></div>
+    <div class="field"><label for="rate">Tasa de interés anual (%)</label><input id="rate" type="number" min="0" step="0.0001" value="7"><small class="help">Tasa nominal anual pactada para el financiamiento. Ingrese 7 para representar 7% anual.</small></div>
+    <div class="field"><label for="feci">FECI anual (%)</label><input id="feci" type="number" min="0" step="0.0001" value="1"><small class="help">Porcentaje anual de FECI, cuando corresponda. Puede colocar 0 si la operación está exenta o no aplica.</small></div>
+    <div class="field"><label for="grace">Período de gracia (meses)</label><input id="grace" type="number" min="0" step="1" value="0"><small class="help">Meses iniciales sin amortización de capital. Durante este período se pagan intereses y FECI; no se capitalizan en este modelo.</small></div>
+    <div class="field"><label for="term">Plazo total (meses)</label><input id="term" type="number" min="1" step="1" value="60"><small class="help">Duración total desde el primer período, incluyendo los meses de gracia. El plazo efectivo para amortizar será plazo total menos gracia.</small></div>
+    <div class="field"><label for="date">Fecha de desembolso</label><input id="date" type="date"><small class="help">Fecha de referencia para construir el calendario. La primera cuota se ubica un mes después, conservando el día cuando sea posible.</small></div>
+    <div class="field"><label for="method">Sistema de amortización</label><select id="method"><option value="french">Francés – cuota nivelada</option><option value="german">Alemán – capital constante</option><option value="american">Americano – capital al vencimiento</option></select><small class="help">Francés: cuota nivelada. Alemán: abono a capital constante. Americano: intereses periódicos y pago total del capital al vencimiento.</small></div>
+    <div class="field"><label for="currency">Moneda de presentación</label><select id="currency"><option value="B/.">Balboas (B/.)</option><option value="$">Dólares (US$)</option></select><small class="help">Solo modifica la presentación de los importes; no altera los cálculos financieros.</small></div>
+  </div>
+  <div class="actions">
+    <button class="primary" id="calculate">Calcular amortización</button>
+    <button class="accent" id="compare">Comparar los tres sistemas</button>
+    <button class="secondary" id="csv">Exportar cronograma CSV</button>
+    <button class="secondary" id="print">Imprimir / Guardar PDF</button>
+    <button class="danger" id="reset">Restablecer</button>
+  </div>
+  <div class="alert" id="alert" role="alert"></div>
+</section>
+
+<section class="card">
+  <h2>2. Indicadores del crédito <span class="badge" id="methodBadge">Sistema francés</span></h2>
+  <div class="kpis" id="kpis">
+    <div class="kpi"><div class="label">Capital inicial</div><div class="value">—</div></div>
+    <div class="kpi"><div class="label">Cuota inicial</div><div class="value">—</div></div>
+    <div class="kpi"><div class="label">Cuota final</div><div class="value">—</div></div>
+    <div class="kpi"><div class="label">Intereses totales</div><div class="value">—</div></div>
+    <div class="kpi"><div class="label">FECI total</div><div class="value">—</div></div>
+    <div class="kpi"><div class="label">Servicio total</div><div class="value">—</div></div>
+    <div class="kpi"><div class="label">Costo financiero</div><div class="value">—</div></div>
+    <div class="kpi"><div class="label">Plazo efectivo</div><div class="value">—</div></div>
+    <div class="kpi"><div class="label">Meses de gracia</div><div class="value">—</div></div>
+    <div class="kpi"><div class="label">Saldo al vencimiento</div><div class="value">—</div></div>
+  </div>
+  <p class="note">Costo financiero = intereses + FECI. Servicio total = capital amortizado + intereses + FECI. No incluye comisiones, seguros, gastos legales ni otros cargos.</p>
+</section>
+
+<section class="card">
+  <h2>3. Comparación de los tres sistemas</h2>
+  <p class="section-sub">Comparación calculada con el mismo capital, tasa, FECI, plazo y período de gracia.</p>
+  <div class="comparison" id="comparison">
+    <div class="compare-card"><h3>Francés</h3><p>Presione “Comparar los tres sistemas” para ver los resultados.</p></div>
+    <div class="compare-card"><h3>Alemán</h3><p>Presione “Comparar los tres sistemas” para ver los resultados.</p></div>
+    <div class="compare-card"><h3>Americano</h3><p>Presione “Comparar los tres sistemas” para ver los resultados.</p></div>
+  </div>
+  <p class="note">La comparación permite observar la diferencia entre una cuota nivelada, una amortización constante de capital y una estructura con pago de capital concentrado al vencimiento.</p>
+</section>
+
+<section class="card">
+  <h2>4. Visualización del comportamiento del crédito</h2>
+  <div class="two-col">
+    <div class="chart-box"><h3 style="font-size:14px;color:var(--navy)">Evolución del saldo</h3><canvas id="balanceChart" width="700" height="250"></canvas></div>
+    <div class="chart-box"><h3 style="font-size:14px;color:var(--navy)">Composición del servicio de deuda</h3><canvas id="componentsChart" width="700" height="250"></canvas></div>
+  </div>
+  <div class="legend"><span style="--swatch:#1e5a7a">Saldo de capital</span><span style="--swatch:#168477">Amortización de capital</span><span style="--swatch:#d59a38">Intereses + FECI</span></div>
+</section>
+
+<section class="card">
+  <h2>5. Resumen anual</h2>
+  <div class="table-wrap"><table id="annualTable"><thead><tr><th>Año</th><th>Capital amortizado</th><th>Intereses</th><th>FECI</th><th>Servicio de deuda</th><th>Saldo al cierre</th></tr></thead><tbody></tbody><tfoot></tfoot></table></div>
+</section>
+
+<section class="card">
+  <h2>6. Cronograma mensual de amortización</h2>
+  <div class="table-wrap" style="max-height:560px"><table id="scheduleTable"><thead><tr><th>Período</th><th>Fecha de pago</th><th>Saldo inicial</th><th>Abono a capital</th><th>Intereses</th><th>FECI</th><th>Cuota total</th><th>Saldo final</th></tr></thead><tbody></tbody><tfoot></tfoot></table></div>
+  <p class="note">Los cálculos mantienen precisión interna y se muestran redondeados a dos decimales. El último período ajusta el capital para cancelar el saldo pendiente, evitando residuos por redondeo.</p>
+</section>
+
+<section class="card">
+  <h2>7. Metodología, supuestos y alcance</h2>
+  <div class="method-note">
+    <b>Tasa periódica utilizada:</b> (tasa de interés anual + FECI anual) ÷ 12. Para mostrar los componentes por separado, el interés se calcula con la tasa de interés anual ÷ 12 y el FECI con la tasa FECI anual ÷ 12, ambos sobre el saldo inicial de cada mes.<br><br>
+    <b>Período de gracia:</b> forma parte del plazo total. En esos meses no se amortiza capital; se pagan los intereses y el FECI del período. El interés no pagado no se capitaliza en este modelo.<br><br>
+    <b>Sistema francés:</b> cuota total nivelada durante el plazo de amortización, calculada sobre la tasa mensual combinada. La proporción de intereses disminuye y la de capital aumenta.<br>
+    <b>Sistema alemán:</b> abono a capital constante durante el plazo de amortización; los intereses y la cuota total disminuyen con el saldo.<br>
+    <b>Sistema americano:</b> pagos periódicos de intereses y FECI; el capital se cancela en un solo pago al vencimiento.<br><br>
+    <b>Convención de fechas:</b> la primera cuota vence un mes después de la fecha de desembolso. Se conserva el día del mes siempre que exista; de lo contrario, se utiliza el último día del mes correspondiente.
+  </div>
+  <p class="note"><b>Advertencia:</b> herramienta de apoyo para análisis y simulación, no sustituye el contrato de crédito, las políticas institucionales ni la validación del área financiera/legal. El tratamiento del FECI, la base de cálculo, la convención de días (30/360, actual/365 u otra), las tasas efectivas, fechas de corte, pagos irregulares, comisiones y seguros pueden variar según la operación y la normativa aplicable. Verifique los supuestos antes de utilizar los resultados para una decisión crediticia.</p>
+</section>
+<footer>Calculadora Financiera de Amortización · Herramienta de apoyo para análisis de créditos</footer>
+</main>
+<script>
+"use strict";
+const $ = id => document.getElementById(id);
+let currentRows = [], currentResult = null;
+const methodNames = {french:"Sistema francés",german:"Sistema alemán",american:"Sistema americano"};
+const money = n => (Number(n)||0).toLocaleString("es-PA",{minimumFractionDigits:2,maximumFractionDigits:2});
+const fmt = n => `${$("currency").value} ${money(n)}`;
+function getInputs(){
+ return {P:Number($("principal").value), r:Number($("rate").value)/100, f:Number($("feci").value)/100,
+  G:Number($("grace").value), N:Number($("term").value), date:$("date").value, method:$("method").value};
+}
+function validate(x){
+ if(!Number.isFinite(x.P)||x.P<=0) return "El monto del préstamo debe ser mayor que cero.";
+ if(!Number.isFinite(x.r)||x.r<0||!Number.isFinite(x.f)||x.f<0) return "Las tasas de interés y FECI no pueden ser negativas.";
+ if(!Number.isInteger(x.G)||x.G<0) return "El período de gracia debe ser un número entero igual o mayor que cero.";
+ if(!Number.isInteger(x.N)||x.N<1) return "El plazo total debe ser un número entero mayor que cero.";
+ if(x.G>=x.N) return "El período de gracia debe ser menor que el plazo total para que exista amortización de capital.";
+ if(!x.date) return "Indique una fecha de desembolso.";
+ return "";
+}
+function addMonthsClamped(dateString,months){
+ const [y,m,d]=dateString.split("-").map(Number);
+ const first=new Date(y,m-1+months,1);
+ const last=new Date(first.getFullYear(),first.getMonth()+1,0).getDate();
+ const out=new Date(first.getFullYear(),first.getMonth(),Math.min(d,last));
+ return `${out.getFullYear()}-${String(out.getMonth()+1).padStart(2,"0")}-${String(out.getDate()).padStart(2,"0")}`;
+}
+function calculate(x,method){
+ const M=x.N-x.G, i=(x.r+x.f)/12, ir=x.r/12, fr=x.f/12;
+ let fixed=0, constantPrincipal=x.P/M;
+ if(method==="french") fixed=i===0?x.P/M:x.P*i/(1-Math.pow(1+i,-M));
+ let balance=x.P, rows=[];
+ for(let k=1;k<=x.N;k++){
+  const opening=balance, interest=opening*ir, feci=opening*fr;
+  let principal=0, payment=interest+feci;
+  if(k>x.G){
+   const amortNo=k-x.G;
+   if(method==="french"){
+    payment=fixed; principal=payment-interest-feci;
+   }else if(method==="german"){
+    principal=constantPrincipal; payment=principal+interest+feci;
+   }else{
+    principal=amortNo===M?balance:0; payment=principal+interest+feci;
+   }
+   if(amortNo===M || principal>balance){principal=balance;payment=principal+interest+feci;}
+  }
+  principal=Math.max(0,Math.min(principal,balance));
+  balance=Math.max(0,balance-principal);
+  if(k===x.N && balance<0.005) balance=0;
+  payment=principal+interest+feci;
+  rows.push({period:k,date:addMonthsClamped(x.date,k),opening,principal,interest,feci,payment,closing:balance});
+ }
+ const sums=rows.reduce((a,r)=>({principal:a.principal+r.principal,interest:a.interest+r.interest,feci:a.feci+r.feci,payment:a.payment+r.payment}),{principal:0,interest:0,feci:0,payment:0});
+ return {rows,sums,first:rows[0]?.payment||0,firstAmort:rows[x.G]?.payment||0,last:rows.at(-1)?.payment||0,finalBalance:balance,method};
+}
+function showAlert(msg){$("alert").textContent=msg;$("alert").style.display=msg?"block":"none";}
+function renderKpis(x,res){
+ const items=[
+  ["Capital inicial",fmt(x.P)],["Primera cuota",fmt(res.first)],["Primera cuota con capital",fmt(res.firstAmort)],
+  ["Cuota final",fmt(res.last)],["Intereses totales",fmt(res.sums.interest)],["FECI total",fmt(res.sums.feci)],
+  ["Servicio total",fmt(res.sums.payment)],["Costo financiero",fmt(res.sums.interest+res.sums.feci)],
+  ["Plazo efectivo",`${x.N-x.G} meses`],["Saldo al vencimiento",fmt(res.finalBalance)]
+ ];
+ $("kpis").innerHTML=items.map(([a,b])=>`<div class="kpi"><div class="label">${a}</div><div class="value">${b}</div><div class="hint">${a==="Costo financiero"?"Intereses + FECI":a==="Servicio total"?"Capital + intereses + FECI":""}</div></div>`).join("");
+ $("methodBadge").textContent=methodNames[res.method];
+}
+function renderSchedule(rows){
+ const body=$("scheduleTable").querySelector("tbody");
+ body.innerHTML=rows.map(r=>`<tr><td>${r.period}</td><td>${r.date}</td><td>${money(r.opening)}</td><td>${money(r.principal)}</td><td>${money(r.interest)}</td><td>${money(r.feci)}</td><td>${money(r.payment)}</td><td>${money(r.closing)}</td></tr>`).join("");
+ const sums=rows.reduce((a,r)=>({principal:a.principal+r.principal,interest:a.interest+r.interest,feci:a.feci+r.feci,payment:a.payment+r.payment}),{principal:0,interest:0,feci:0,payment:0});
+ $("scheduleTable").querySelector("tfoot").innerHTML=`<tr><td colspan="3">Totales</td><td>${money(sums.principal)}</td><td>${money(sums.interest)}</td><td>${money(sums.feci)}</td><td>${money(sums.payment)}</td><td>${money(rows.at(-1)?.closing||0)}</td></tr>`;
+}
+function renderAnnual(rows){
+ const groups={};
+ rows.forEach(r=>{const year=r.date.slice(0,4);if(!groups[year])groups[year]={principal:0,interest:0,feci:0,payment:0,closing:r.closing};
+  const g=groups[year];g.principal+=r.principal;g.interest+=r.interest;g.feci+=r.feci;g.payment+=r.payment;g.closing=r.closing;});
+ const vals=Object.entries(groups);
+ $("annualTable").querySelector("tbody").innerHTML=vals.map(([y,g])=>`<tr><td>${y}</td><td>${money(g.principal)}</td><td>${money(g.interest)}</td><td>${money(g.feci)}</td><td>${money(g.payment)}</td><td>${money(g.closing)}</td></tr>`).join("");
+ const total=vals.reduce((a,[,g])=>({principal:a.principal+g.principal,interest:a.interest+g.interest,feci:a.feci+g.feci,payment:a.payment+g.payment}),{principal:0,interest:0,feci:0,payment:0});
+ $("annualTable").querySelector("tfoot").innerHTML=`<tr><td>Total</td><td>${money(total.principal)}</td><td>${money(total.interest)}</td><td>${money(total.feci)}</td><td>${money(total.payment)}</td><td>${money(rows.at(-1)?.closing||0)}</td></tr>`;
+}
+function drawLine(canvasId,series,label){
+ const c=$(canvasId),ctx=c.getContext("2d"),w=c.width,h=c.height;ctx.clearRect(0,0,w,h);
+ const pad={l:55,r:18,t:15,b:35},pw=w-pad.l-pad.r,ph=h-pad.t-pad.b;
+ const max=Math.max(1,...series.map(s=>Math.max(...s.data))),n=Math.max(1,series[0]?.data.length||1);
+ ctx.strokeStyle="#dfe6ec";ctx.fillStyle="#68798b";ctx.font="12px Segoe UI,Arial";
+ for(let j=0;j<=4;j++){let y=pad.t+ph*j/4;ctx.beginPath();ctx.moveTo(pad.l,y);ctx.lineTo(w-pad.r,y);ctx.stroke();ctx.fillText(money(max*(1-j/4)),2,y+4);}
+ const colors=["#1e5a7a","#168477","#d59a38"];
+ series.forEach((s,idx)=>{ctx.strokeStyle=colors[idx%3];ctx.lineWidth=2.5;ctx.beginPath();s.data.forEach((v,i)=>{let x=pad.l+(n<=1?0:pw*i/(n-1)),y=pad.t+ph*(1-v/max);i?ctx.lineTo(x,y):ctx.moveTo(x,y)});ctx.stroke();});
+ ctx.fillText("Período (meses)",w/2-40,h-7);
+}
+function drawBars(rows){
+ const c=$("componentsChart"),ctx=c.getContext("2d"),w=c.width,h=c.height;ctx.clearRect(0,0,w,h);
+ const pad={l:48,r:15,t:15,b:35},pw=w-pad.l-pad.r,ph=h-pad.t-pad.b;
+ const vals=rows.map(r=>r.principal+r.interest+r.feci),max=Math.max(1,...vals);
+ ctx.strokeStyle="#e2e8ed";ctx.fillStyle="#68798b";ctx.font="12px Segoe UI,Arial";
+ for(let j=0;j<=4;j++){let y=pad.t+ph*j/4;ctx.beginPath();ctx.moveTo(pad.l,y);ctx.lineTo(w-pad.r,y);ctx.stroke();ctx.fillText(money(max*(1-j/4)),2,y+4);}
+ const step=pw/Math.max(1,rows.length),bw=Math.max(1,step*.72);
+ rows.forEach((r,i)=>{let x=pad.l+i*step+step*.14,base=pad.t+ph;
+  [[r.principal,"#168477"],[r.interest+r.feci,"#d59a38"]].forEach(([v,col])=>{let bh=ph*v/max;ctx.fillStyle=col;ctx.fillRect(x,base-bh,bw,bh);base-=bh;});
+ });
+ ctx.fillStyle="#68798b";ctx.fillText("Período (meses)",w/2-40,h-7);
+}
+function renderCharts(rows){
+ drawLine("balanceChart",[{data:[rows[0]?.opening||0,...rows.map(r=>r.closing)]}],"Saldo");
+ drawBars(rows);
+}
+function renderComparison(x){
+ const methods=["french","german","american"];
+ const results=methods.map(m=>calculate(x,m));
+ $("comparison").innerHTML=results.map(r=>`<div class="compare-card"><h3>${methodNames[r.method]}</h3><div class="big">${fmt(r.sums.payment)}</div><p><b>Servicio total:</b> incluye capital, intereses y FECI.</p><p>Intereses: <b>${fmt(r.sums.interest)}</b></p><p>FECI: <b>${fmt(r.sums.feci)}</b></p><p>Costo financiero: <b>${fmt(r.sums.interest+r.sums.feci)}</b></p><p>Primera cuota con capital: <b>${fmt(r.firstAmort)}</b></p><p>Cuota final: <b>${fmt(r.last)}</b></p></div>`).join("");
+}
+function run(){
+ const x=getInputs(),err=validate(x);if(err){showAlert(err);return false;}
+ const res=calculate(x,x.method);currentRows=res.rows;currentResult=res;showAlert("");
+ renderKpis(x,res);renderSchedule(res.rows);renderAnnual(res.rows);renderCharts(res.rows);return true;
+}
+$("calculate").addEventListener("click",run);
+$("compare").addEventListener("click",()=>{const x=getInputs(),err=validate(x);if(err){showAlert(err);return;}showAlert("");renderComparison(x);});
+$("method").addEventListener("change",()=>run());
+$("currency").addEventListener("change",()=>{if(currentResult){run();}});
+$("print").addEventListener("click",()=>{if(run())window.print();});
+$("csv").addEventListener("click",()=>{
+ if(!currentRows.length&&!run())return;
+ const rows=[["Periodo","Fecha de pago","Saldo inicial","Abono a capital","Intereses","FECI","Cuota total","Saldo final"],...currentRows.map(r=>[r.period,r.date,r.opening.toFixed(2),r.principal.toFixed(2),r.interest.toFixed(2),r.feci.toFixed(2),r.payment.toFixed(2),r.closing.toFixed(2)])];
+ const csv="\uFEFF"+rows.map(row=>row.map(v=>`"${String(v).replace(/"/g,'""')}"`).join(";")).join("\r\n");
+ const blob=new Blob([csv],{type:"text/csv;charset=utf-8;"}),url=URL.createObjectURL(blob),a=document.createElement("a");
+ a.href=url;a.download="cronograma_amortizacion.csv";document.body.appendChild(a);a.click();a.remove();URL.revokeObjectURL(url);
+});
+$("reset").addEventListener("click",()=>{
+ $("principal").value=100000;$("rate").value=7;$("feci").value=1;$("grace").value=0;$("term").value=60;$("method").value="french";$("currency").value="B/.";
+ setDefaultDate();run();$("comparison").innerHTML='<div class="compare-card"><h3>Francés</h3><p>Presione “Comparar los tres sistemas” para ver los resultados.</p></div><div class="compare-card"><h3>Alemán</h3><p>Presione “Comparar los tres sistemas” para ver los resultados.</p></div><div class="compare-card"><h3>Americano</h3><p>Presione “Comparar los tres sistemas” para ver los resultados.</p></div>';
+});
+function setDefaultDate(){const d=new Date();$("date").value=`${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,"0")}-${String(d.getDate()).padStart(2,"0")}`;}
+setDefaultDate();run();
+</script>
+</body>
+</html>
